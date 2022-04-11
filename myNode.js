@@ -1,5 +1,5 @@
 class MyNode {
-    constructor(parent, allPath, name) {
+    constructor(parent, state, allPath, name) {
         const self = this;
         const node = parent.group();
         node.rect(200, 200).attr({ "fill": "#fff", "fill-opacity": 0.7, "stroke-width": 2, "stroke": "#000", "rx": 15 });
@@ -7,13 +7,13 @@ class MyNode {
         const text = node.text(name);
         text.move(80, 10);
 
-        self.node = node;
+        self.svg = node;
         self.text = text;
         self.connections = [];
         self.inputs = [];
         self.outputs = [];
         self.allPath = allPath;
-
+        self.state = state;
         self.canDrag = true;
 
         node.on("beforedrag", function (e) {
@@ -42,24 +42,24 @@ class MyNode {
         var socketY = 20;
         if (flow === "out") {
             socketX = 190;
-            socketY += 40 * this.outputs.length;
+            socketY += 40 * self.outputs.length;
         } else {
-            socketY += 40 * this.inputs.length;
+            socketY += 40 * self.inputs.length;
         }
 
-        const socket = this.node.group();
+        const socket = self.svg.group();
         const rect = socket.rect(20, 20).attr({ "fill": color });
         const polygon = socket.polygon("20,0 30,10 20,20");
         polygon.fill(color).move(20, 0);
 
         socket.move(socketX, socketY);
         if (flow === "out") {
-            this.outputs.push({
+            self.outputs.push({
                 svg: socket,
                 type
             });
         } else {
-            this.inputs.push({
+            self.inputs.push({
                 svg: socket,
                 type
             });
@@ -71,6 +71,12 @@ class MyNode {
             rect.fill("#0000ff");
             polygon.fill("#0000ff");
             socket.css("cursor", "pointer");
+            if (self.state.makingConnection) {
+                if (self.state.endSocket !== socket) {
+                    self.state.endSocket = socket;
+                    console.log("endSocket");
+                }
+            }
         });
         socket.on("mouseleave", function () {
             console.log("I am out!");
@@ -78,6 +84,14 @@ class MyNode {
             rect.fill(color);
             polygon.fill(color);
             socket.css("cursor", null);
+            if (self.state.makingConnection) {
+                self.state.endSocket = null;
+            }
+        });
+        socket.on("mousedown", function () {
+            console.log("start to draw");
+            self.state.makingConnection = true;
+            self.state.startSocket = socket;
         });
         return socket;
     }

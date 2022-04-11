@@ -5,34 +5,79 @@
     <title>SVG.js</title>
     <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
     <script src="svg.draggable.min.js"></script>
-    <script src="myNode.js"></script>
+    <script src="MyNode.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uuid@latest/dist/umd/uuidv4.min.js"></script>
+    <style>
+        body {
+            background-color: #252525;
+        }
+
+        .disable-select {
+            user-select: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="drawing"></div>
+    <div id="drawing" class="disable-select"></div>
     <script>
         const allPath = new Map();
+        const state = {
+            makingConnection: false,
+            startSocket: null,
+            endSocket: null
+        };
 
         SVG.on(document, "DOMContentLoaded", function () {
             const draw = SVG().addTo("#drawing").size("100vw", "100vh");
+            const drawingPath = draw.path("M 0 0 L 0 0");
+            drawingPath.stroke({ color: "#d61c00", width: 10, linecap: "round", linejoin: "round" });
 
-            const node1 = new MyNode(draw, allPath, "node 1");
+            draw.on("mouseup", function () {
+                console.log("up");
+                if (state.makingConnection) {
+                    if (!state.endSocket) {
+                        drawingPath.hide();
+                    } else {
+                        console.log("make connection!");
+                        drawingPath.hide();
+                        const pathId = uuidv4();
+                        const path = draw.path("M " + state.startSocket.cx() + " " + state.startSocket.cy() + " L " + state.endSocket.cx() + " " + state.endSocket.cy());
+                        path.stroke({ color: "#d64c11", width: 5, linecap: "round", linejoin: "round" });
+                        allPath.set(pathId, path);
+
+                        node1.addConnection(pathId, state.startSocket, state.endSocket);
+                        node2.addConnection(pathId, state.startSocket, state.endSocket);
+                    }
+                }
+                state.makingConnection = false;
+                state.startSocket = null;
+                state.endSocket = null;
+            });
+            draw.on("mousemove", function (e) {
+                if (state.makingConnection) {
+                    console.log("drawing");
+                    const startX = state.startSocket.cx();
+                    const startY = state.startSocket.cy();
+                    const endX = e.offsetX;
+                    const endY = e.offsetY;
+                    drawingPath.plot("M " + startX + " " + startY + " L " + endX + " " + endY);
+                    drawingPath.show();
+                }
+            });
+
+            const node1 = new MyNode(draw, state, allPath, "node 1");
             const s1 = node1.addSocket("exec", "out");
             node1.addSocket("int", "out");
 
-            const node2 = new MyNode(draw, allPath, "node 2");
+            const node2 = new MyNode(draw, state, allPath, "node 2");
             const s2 = node2.addSocket("exec", "in");
             node2.addSocket("exec", "out");
             node2.addSocket("int", "out");
-
-            const pathId = uuidv4();
-            const path = draw.path("M " + s1.cx() + " " + s1.cy() + " L " + s2.cx() + " " + s2.cy());
-            path.stroke({ color: "#d64c11", width: 10, linecap: "round", linejoin: "round" });
-            allPath.set(pathId, path);
-
-            node1.addConnection(pathId, s1, s2);
-            node2.addConnection(pathId, s1, s2);
         });
     </script>
 </body>
