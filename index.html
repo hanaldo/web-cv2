@@ -1,0 +1,24 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
+</head>
+
+<body>
+    <div id="drawflow" style="width: 100%; height: 100%;"></div>
+    <script>
+        var id = document.getElementById("drawflow");
+        const editor = new Drawflow(id);
+        editor.start();
+
+        var html = `<div>Set</div>`;
+        var data = { "name": '' };
+
+        editor.addNode('github', 1, 1, 150, 150, 'github', data, html);
+
+        editor.addNode('github', 1, 1, 300, 150, 'github', data, html);
+    </script>
+</body>
+
+</html>

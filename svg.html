@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SVG.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+    <script src="svg.draggable.min.js"></script>
+    <script src="myNode.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uuid@latest/dist/umd/uuidv4.min.js"></script>
+</head>
+
+<body>
+    <div id="drawing"></div>
+    <script>
+        const allPath = new Map();
+
+        SVG.on(document, "DOMContentLoaded", function () {
+            const draw = SVG().addTo("#drawing").size("100vw", "100vh");
+
+            const node1 = new MyNode(draw, allPath, "node 1");
+            const s1 = node1.addSocket("exec", "out");
+            node1.addSocket("int", "out");
+
+            const node2 = new MyNode(draw, allPath, "node 2");
+            const s2 = node2.addSocket("exec", "in");
+            node2.addSocket("exec", "out");
+            node2.addSocket("int", "out");
+
+            const pathId = uuidv4();
+            const path = draw.path("M " + s1.cx() + " " + s1.cy() + " L " + s2.cx() + " " + s2.cy());
+            path.stroke({ color: "#d64c11", width: 10, linecap: "round", linejoin: "round" });
+            allPath.set(pathId, path);
+
+            node1.addConnection(pathId, s1, s2);
+            node2.addConnection(pathId, s1, s2);
+        });
+    </script>
+</body>
+
+</html>
